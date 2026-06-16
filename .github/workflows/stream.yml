@@ -25,6 +25,6 @@ jobs:
         run: |
 
           docker run \
-          -e INPUT_SOURCE="${{ secrets.INPUT_SOURCE }}" \
+          -e GOOGLE_DRIVE_FILE_ID="${{ secrets.GOOGLE_DRIVE_FILE_ID }}" \
           -e YOUTUBE_STREAM_KEY="${{ secrets.YOUTUBE_STREAM_KEY }}" \
-          yt-stream
+           yt-stream
