@@ -2,23 +2,19 @@
 
 set -e
 
-echo "🎥 Starting BROWSER YouTube LIVE system..."
+echo "🎥 Starting browser stream system..."
 
 URL="https://www.youtube.com/watch?v=FuuC4dpSQ1M"
-
-echo "🌐 Extracting stream using real browser..."
 
 STREAM_URL=$(node extract.js "$URL")
 
 if [ -z "$STREAM_URL" ]; then
-    echo "❌ Browser failed (YouTube blocked or no manifest found)"
+    echo "❌ No stream found (YouTube likely blocked extraction)"
     exit 1
 fi
 
-echo "✅ Stream found:"
+echo "✅ Stream URL:"
 echo "$STREAM_URL"
-
-echo "🚀 Starting FFmpeg..."
 
 ffmpeg -re -i "$STREAM_URL" \
 -c:v libx264 -preset veryfast -pix_fmt yuv420p \
