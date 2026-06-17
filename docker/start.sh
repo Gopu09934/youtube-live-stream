@@ -4,32 +4,21 @@ set -e
 
 mkdir -p /app/videos
 
-FILE_ID="${GOOGLE_DRIVE_FILE_ID}"
-OUTPUT="/app/videos/video.mp4"
-
 echo "Downloading video..."
 
-# Download
-wget -O "$OUTPUT" \
-"https://drive.google.com/uc?export=download&id=${FILE_ID}"
+wget -O /app/videos/video.mp4 \
+"https://github.com/Gopu09934/youtube-live-stream/releases/download/v1/Live.High-Definition.Views.from.the.International.Space.Station.Official.NASA.Stream.mp4"
 
 echo "Checking file..."
 
-# ❌ Prevent HTML fake file issue
-if ! ffprobe "$OUTPUT" >/dev/null 2>&1; then
-    echo "ERROR: Invalid video file downloaded (Google Drive blocked or returned HTML)"
-    echo "Deleteing bad file..."
-    rm -f "$OUTPUT"
-    exit 1
-fi
+ffprobe /app/videos/video.mp4 >/dev/null
 
-echo "Download OK"
 echo "Starting stream..."
 
 ffmpeg \
 -re \
 -stream_loop -1 \
--i "$OUTPUT" \
+-i /app/videos/video.mp4 \
 -c:v libx264 \
 -preset veryfast \
 -c:a aac \
