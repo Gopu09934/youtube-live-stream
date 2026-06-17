@@ -7,7 +7,8 @@ RUN apt-get update && \
         ffmpeg \
         python3 \
         python3-pip \
-        curl && \
+        curl \
+        ca-certificates && \
     pip3 install --break-system-packages gdown yt-dlp && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
@@ -15,6 +16,7 @@ RUN apt-get update && \
 WORKDIR /app
 
 COPY start.sh .
+COPY cookies.txt /app/cookies.txt
 
 RUN chmod +x start.sh
 
