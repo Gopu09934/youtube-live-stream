@@ -9,28 +9,21 @@ OUTPUT="/app/videos/video.mp4"
 
 echo "Downloading video..."
 
-# Try wget first (most stable)
-if command -v wget >/dev/null 2>&1; then
-  wget -O "$OUTPUT" \
-  "https://drive.google.com/uc?export=download&id=${FILE_ID}" || true
+# Download
+wget -O "$OUTPUT" \
+"https://drive.google.com/uc?export=download&id=${FILE_ID}"
+
+echo "Checking file..."
+
+# ❌ Prevent HTML fake file issue
+if ! ffprobe "$OUTPUT" >/dev/null 2>&1; then
+    echo "ERROR: Invalid video file downloaded (Google Drive blocked or returned HTML)"
+    echo "Deleteing bad file..."
+    rm -f "$OUTPUT"
+    exit 1
 fi
 
-# Fallback if wget fails or file empty
-if [ ! -s "$OUTPUT" ]; then
-  echo "wget failed, trying fallback method..."
-
-  curl -L \
-  "https://drive.google.com/uc?export=download&id=${FILE_ID}" \
-  -o "$OUTPUT" || true
-fi
-
-# Final check
-if [ ! -s "$OUTPUT" ]; then
-  echo "ERROR: Download failed. Google Drive is blocking access."
-  exit 1
-fi
-
-echo "Download complete"
+echo "Download OK"
 echo "Starting stream..."
 
 ffmpeg \
