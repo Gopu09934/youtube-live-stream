@@ -2,21 +2,25 @@
 
 set -e
 
-mkdir -p /app/videos
+echo "🎥 Starting BROWSER YouTube LIVE system..."
 
-echo "Downloading video..."
+URL="https://www.youtube.com/watch?v=FuuC4dpSQ1M"
 
-gdown "https://drive.google.com/uc?id=${GOOGLE_DRIVE_FILE_ID}" \
-      -O /app/videos/video.mp4
+echo "🌐 Extracting stream using real browser..."
 
-echo "Starting stream..."
+STREAM_URL=$(node extract.js "$URL")
 
-ffmpeg \
--re \
--stream_loop -1 \
--i /app/videos/video.mp4 \
--c:v libx264 \
--preset veryfast \
--c:a aac \
--f flv \
-"rtmp://a.rtmp.youtube.com/live2/${YOUTUBE_STREAM_KEY}"
+if [ -z "$STREAM_URL" ]; then
+    echo "❌ Browser failed (YouTube blocked or no manifest found)"
+    exit 1
+fi
+
+echo "✅ Stream found:"
+echo "$STREAM_URL"
+
+echo "🚀 Starting FFmpeg..."
+
+ffmpeg -re -i "$STREAM_URL" \
+-c:v libx264 -preset veryfast -pix_fmt yuv420p \
+-c:a aac -b:a 128k \
+-f flv "rtmp://a.rtmp.youtube.com/live2/${YOUTUBE_STREAM_KEY}"
