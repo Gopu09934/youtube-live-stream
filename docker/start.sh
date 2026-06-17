@@ -1,52 +1,36 @@
 #!/bin/bash
 
-set -euo pipefail
-
-URL="https://www.youtube.com/watch?v=uwXgcTc8oY8"
+set -e
 
 echo "🎥 Starting ISS live stream system..."
 
-get_stream() {
-  yt-dlp -f b \
-    --cookies /app/cookies.txt \
-    --no-warnings \
-    --no-check-certificates \
-    -g "$URL"
-}
+VIDEO_URL="https://www.youtube.com/watch?v=uwXgcTc8oY8"
 
-STREAM_URL=$(get_stream)
+mkdir -p /app/media
+
+echo "🔄 Updating yt-dlp..."
+yt-dlp -U || true
+
+echo "📡 Trying to extract live stream (HLS mode)..."
+
+STREAM_URL=$(yt-dlp -f best --hls-prefer-native -g "$VIDEO_URL" 2>/dev/null || true)
 
 if [ -z "$STREAM_URL" ]; then
-  echo "❌ Failed to fetch stream URL"
-  exit 1
+    echo "❌ Failed to extract live stream URL from YouTube"
+    echo "⚠️ Falling back to direct download attempt..."
+
+    yt-dlp -f best -o /app/media/video.mp4 "$VIDEO_URL" || true
+
+    INPUT="/app/media/video.mp4"
+else
+    echo "✅ Stream URL extracted successfully"
+    INPUT="$STREAM_URL"
 fi
 
-echo "▶️ Streaming started..."
+echo "🚀 Starting FFmpeg stream..."
 
-while true; do
-
-  ffmpeg \
-    -re \
-    -reconnect 1 \
-    -reconnect_streamed 1 \
-    -reconnect_delay_max 5 \
-    -i "$STREAM_URL" \
-    -c:v libx264 \
-    -preset veryfast \
-    -tune zerolatency \
-    -maxrate 3000k \
-    -bufsize 6000k \
-    -g 50 \
-    -c:a aac \
-    -b:a 128k \
-    -ar 44100 \
-    -f flv \
-    "rtmp://a.rtmp.youtube.com/live2/${YOUTUBE_STREAM_KEY}"
-
-  echo "⚠️ Stream dropped. Reconnecting..."
-
-  sleep 5
-
-  STREAM_URL=$(get_stream)
-
-done
+ffmpeg -re -stream_loop -1 \
+-i "$INPUT" \
+-c:v libx264 -preset veryfast -pix_fmt yuv420p \
+-c:a aac -b:a 128k \
+-f flv "rtmp://a.rtmp.youtube.com/live2/${YOUTUBE_STREAM_KEY}"
