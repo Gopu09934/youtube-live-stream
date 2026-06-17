@@ -4,22 +4,32 @@ set -euo pipefail
 
 URL="https://www.youtube.com/watch?v=uwXgcTc8oY8"
 
-mkdir -p /app/videos
+echo "🎥 Starting ISS live stream system..."
 
-echo "🎥 Fetching live stream URL..."
+get_stream() {
+  yt-dlp -f b \
+    --cookies /app/cookies.txt \
+    --no-warnings \
+    --no-check-certificates \
+    -g "$URL"
+}
 
-STREAM_URL=$(yt-dlp -f best -g "$URL")
+STREAM_URL=$(get_stream)
 
 if [ -z "$STREAM_URL" ]; then
-  echo "❌ Failed to get stream URL"
+  echo "❌ Failed to fetch stream URL"
   exit 1
 fi
 
-echo "▶️ Starting stream..."
+echo "▶️ Streaming started..."
 
 while true; do
+
   ffmpeg \
     -re \
+    -reconnect 1 \
+    -reconnect_streamed 1 \
+    -reconnect_delay_max 5 \
     -i "$STREAM_URL" \
     -c:v libx264 \
     -preset veryfast \
@@ -33,8 +43,10 @@ while true; do
     -f flv \
     "rtmp://a.rtmp.youtube.com/live2/${YOUTUBE_STREAM_KEY}"
 
-  echo "⚠️ Stream stopped. Reconnecting in 5 seconds..."
+  echo "⚠️ Stream dropped. Reconnecting..."
+
   sleep 5
 
-  STREAM_URL=$(yt-dlp -f best -g "$URL")
+  STREAM_URL=$(get_stream)
+
 done
