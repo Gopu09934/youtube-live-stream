@@ -2,7 +2,7 @@ FROM ubuntu:24.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install system dependencies + Node.js (IMPORTANT for yt-dlp JS runtime)
+# Install dependencies
 RUN apt-get update && \
     apt-get install -y \
         ffmpeg \
@@ -18,15 +18,9 @@ RUN apt-get update && \
 
 WORKDIR /app
 
-# Copy script
+# Copy only required files
 COPY start.sh .
 
-# OPTIONAL: cookies (don’t fail build if missing)
-COPY cookies.txt /app/cookies.txt || true
-
 RUN chmod +x start.sh
-
-# Ensure yt-dlp uses JS runtime properly
-ENV YTDLP_JS_RUNTIME=node
 
 CMD ["./start.sh"]
