@@ -6,8 +6,8 @@ mkdir -p /app/videos
 
 echo "Downloading video..."
 
-wget -O /app/videos/video.mp4 \
-"https://drive.google.com/uc?export=download&id=${GOOGLE_DRIVE_FILE_ID}"
+gdown "https://drive.google.com/uc?id=${GOOGLE_DRIVE_FILE_ID}" \
+      -O /app/videos/video.mp4
 
 echo "Starting stream..."
 
