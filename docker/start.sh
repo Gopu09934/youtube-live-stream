@@ -4,31 +4,50 @@ set -e
 
 echo "🎥 Starting ISS live stream system..."
 
-VIDEO_URL="https://www.youtube.com/live/FuuC4dpSQ1M?si=jFllUFngkmLsElJy"
+VIDEO_URL="https://www.youtube.com/live/FuuC4dpSQ1M"
 
 mkdir -p /app/media
 
+# -----------------------------
+# Update yt-dlp safely
+# -----------------------------
 echo "🔄 Updating yt-dlp..."
 yt-dlp -U || true
 
-echo "📡 Trying to extract live stream (HLS mode)..."
+# -----------------------------
+# Try extracting YouTube stream
+# -----------------------------
+echo "📡 Trying to extract stream..."
 
-STREAM_URL=$(yt-dlp -f best --hls-prefer-native -g "$VIDEO_URL" 2>/dev/null || true)
+STREAM_URL=$(yt-dlp --js-runtimes node -f b -g "$VIDEO_URL" 2>/dev/null || true)
 
-if [ -z "$STREAM_URL" ]; then
-    echo "❌ Failed to extract live stream URL from YouTube"
-    echo "⚠️ Falling back to direct download attempt..."
-
-    yt-dlp -f best -o /app/media/video.mp4 "$VIDEO_URL" || true
-
-    INPUT="/app/media/video.mp4"
-else
-    echo "✅ Stream URL extracted successfully"
+# -----------------------------
+# Decide input source
+# -----------------------------
+if [ -n "$STREAM_URL" ]; then
+    echo "✅ YouTube stream extracted successfully"
     INPUT="$STREAM_URL"
+else
+    echo "❌ YouTube extraction failed (bot protection / JS issue)"
+    echo "⚠️ Using fallback stream..."
+
+    # SAFE fallback (always works)
+    INPUT="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+fi
+
+# -----------------------------
+# Safety check
+# -----------------------------
+if [ -z "$INPUT" ]; then
+    echo "❌ No valid input stream found"
+    exit 1
 fi
 
 echo "🚀 Starting FFmpeg stream..."
 
+# -----------------------------
+# STREAM TO YOUTUBE
+# -----------------------------
 ffmpeg -re -stream_loop -1 \
 -i "$INPUT" \
 -c:v libx264 -preset veryfast -pix_fmt yuv420p \
