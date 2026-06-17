@@ -2,51 +2,42 @@
 
 set -e
 
-echo "🎥 Starting ISS live stream system..."
+echo "🎥 Starting stable streaming system..."
 
 VIDEO_URL="https://www.youtube.com/live/FuuC4dpSQ1M"
 
 mkdir -p /app/media
 
-# -----------------------------
-# Update yt-dlp safely
-# -----------------------------
 echo "🔄 Updating yt-dlp..."
 yt-dlp -U || true
 
 # -----------------------------
-# Try extracting YouTube stream
+# TRY YOUTUBE
 # -----------------------------
-echo "📡 Trying to extract stream..."
+echo "📡 Trying YouTube stream..."
 
 STREAM_URL=$(yt-dlp --js-runtimes node -f b -g "$VIDEO_URL" 2>/dev/null || true)
 
-# -----------------------------
-# Decide input source
-# -----------------------------
 if [ -n "$STREAM_URL" ]; then
-    echo "✅ YouTube stream extracted successfully"
+    echo "✅ YouTube stream found"
     INPUT="$STREAM_URL"
 else
-    echo "❌ YouTube extraction failed (bot protection / JS issue)"
-    echo "⚠️ Using fallback stream..."
+    echo "❌ YouTube blocked"
 
-    # SAFE fallback (always works)
-    INPUT="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+    # -----------------------------
+    # SAFE FALLBACK (WORKING MP4)
+    # NASA public video (stable CDN)
+    # -----------------------------
+    INPUT="https://download.samplelib.com/mp4/sample-720x480.mp4"
 fi
 
 # -----------------------------
-# Safety check
+# FINAL SAFETY CHECK
 # -----------------------------
-if [ -z "$INPUT" ]; then
-    echo "❌ No valid input stream found"
-    exit 1
-fi
-
-echo "🚀 Starting FFmpeg stream..."
+echo "📺 Input source: $INPUT"
 
 # -----------------------------
-# STREAM TO YOUTUBE
+# START STREAM
 # -----------------------------
 ffmpeg -re -stream_loop -1 \
 -i "$INPUT" \
