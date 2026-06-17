@@ -10,8 +10,6 @@ const { chromium } = require('playwright');
 
     page.on('response', async (response) => {
         const rurl = response.url();
-
-        // capture HLS or DASH manifest
         if (rurl.includes("m3u8") || rurl.includes("manifest")) {
             streamUrl = rurl;
         }
@@ -21,11 +19,7 @@ const { chromium } = require('playwright');
 
     await page.waitForTimeout(10000);
 
-    if (streamUrl) {
-        console.log(streamUrl);
-    } else {
-        console.log("");
-    }
+    console.log(streamUrl || "");
 
     await browser.close();
 })();
