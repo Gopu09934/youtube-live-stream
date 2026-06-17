@@ -4,7 +4,7 @@ set -e
 
 echo "🎥 Starting ISS live stream system..."
 
-VIDEO_URL="https://www.youtube.com/watch?v=uwXgcTc8oY8"
+VIDEO_URL="https://www.youtube.com/live/FuuC4dpSQ1M?si=jFllUFngkmLsElJy"
 
 mkdir -p /app/media
 
