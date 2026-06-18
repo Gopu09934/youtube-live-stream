@@ -28,7 +28,7 @@ exec ffmpeg \
     -stream_loop -1 \
     -i /app/videos/video.mp4 \
     -c:v libx264 \
-    -preset veryfast \
+    -preset ultrafast \
     -c:a aac \
     -f flv \
     "rtmp://a.rtmp.youtube.com/live2/${YOUTUBE_STREAM_KEY}"
