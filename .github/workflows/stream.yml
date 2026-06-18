@@ -2,13 +2,19 @@ name: Stream
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: "0 */5 * * *"
+
+permissions:
+  actions: write
+  contents: read
+
+concurrency:
+  group: youtube-stream
+  cancel-in-progress: false
 
 jobs:
   stream:
     runs-on: ubuntu-latest
-    timeout-minutes: 360
+    timeout-minutes: 355
 
     steps:
       - uses: actions/checkout@v4
@@ -18,7 +24,23 @@ jobs:
 
       - name: Start Stream
         run: |
-          docker run \
+          docker run --rm \
             -e VIDEO_URL="${{ secrets.VIDEO_URL }}" \
             -e YOUTUBE_STREAM_KEY="${{ secrets.YOUTUBE_STREAM_KEY }}" \
             yt-stream
+
+      - name: Wait before triggering next run
+        if: always()
+        run: sleep 30
+
+      - name: Trigger next workflow
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          curl -L \
+            -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${GH_TOKEN}" \
+            https://api.github.com/repos/${{ github.repository }}/actions/workflows/stream.yml/dispatches \
+            -d '{"ref":"main"}'
